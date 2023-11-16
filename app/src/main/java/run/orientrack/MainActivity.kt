@@ -2,7 +2,6 @@ package run.orientrack
 
 import android.Manifest
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.ncorti.slidetoact.SlideToActView
@@ -21,11 +20,19 @@ class MainActivity : AppCompatActivity() {
         )
         setContentView(R.layout.activity_main)
 
-        val sta = findViewById<SlideToActView>(R.id.start) as SlideToActView
-//        sta.onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
-//            override fun onSlideComplete(view: SlideToActView) {
-//                // Your own implementation
-//            }
-//        }
+        val startSlider = findViewById<SlideToActView>(R.id.start) as SlideToActView
+        val stopSlider = findViewById<SlideToActView>(R.id.stop) as SlideToActView
+
+        startSlider.onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
+            override fun onSlideComplete(view: SlideToActView) {
+                stopSlider.setCompleted(completed = false, withAnimation = true)
+            }
+        }
+
+        stopSlider.onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
+            override fun onSlideComplete(view: SlideToActView) {
+                startSlider.setCompleted(completed = false, withAnimation = true)
+            }
+        }
     }
 }
