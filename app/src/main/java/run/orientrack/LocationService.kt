@@ -1,5 +1,6 @@
 package run.orientrack
 
+import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
@@ -14,12 +15,19 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import run.orientrack.R
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.security.cert.CertificateException
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 class LocationService: Service() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var locationClient: LocationClient
+    private val client = getUnsafeOkHttpClient()
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
@@ -45,13 +53,12 @@ class LocationService: Service() {
         val notification = NotificationCompat.Builder(this, "location")
             .setContentTitle("Tracking location...")
             .setContentText("Location: null")
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
         locationClient
-            .getLocationUpdates(10000L)
+            .getLocationUpdates(100L)
             .catch { e -> e.printStackTrace() }
             .onEach { location ->
                 val lat = location.latitude.toString()
@@ -60,10 +67,62 @@ class LocationService: Service() {
                     "Location: ($lat, $long)"
                 )
                 notificationManager.notify(1, updatedNotification.build())
-            }
+
+                val request = Request.Builder()
+                    .url("https://backend.orientrack.run:55581/track")
+                    .post(String.format("lat = %s, lon = %s", lat, long).toRequestBody())
+                    .build()
+
+                try {
+                    client.newCall(request).execute().use { response ->
+//                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                        var num = 42;
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                }
             .launchIn(serviceScope)
 
         startForeground(1, notification.build())
+    }
+    fun getUnsafeOkHttpClient(): OkHttpClient {
+        return try {
+            // Create a trust manager that does not validate certificate chains
+            val trustAllCerts = arrayOf<TrustManager>(
+                @SuppressLint("CustomX509TrustManager")
+                object : X509TrustManager {
+                    @SuppressLint("TrustAllX509TrustManager")
+                    @Throws(CertificateException::class)
+                    override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+                    }
+
+                    @SuppressLint("TrustAllX509TrustManager")
+                    @Throws(CertificateException::class)
+                    override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+                    }
+
+                    override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+                        return arrayOf()
+                    }
+                }
+            )
+
+            // Install the all-trusting trust manager
+            val sslContext = SSLContext.getInstance("SSL")
+            sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+
+            // Create an ssl socket factory with our all-trusting manager
+            val sslSocketFactory = sslContext.socketFactory
+
+            val builder = OkHttpClient.Builder()
+            builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
+            builder.hostnameVerifier { _, _ -> true }
+
+            builder.build()
+        } catch (e: Exception) {
+            throw RuntimeException(e)
+        }
     }
 
     private fun stop() {
