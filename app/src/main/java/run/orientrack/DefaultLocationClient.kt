@@ -1,4 +1,4 @@
-package com.plcoding.backgroundlocationtracking
+package run.orientrack
 
 import android.annotation.SuppressLint
 import android.content.Context

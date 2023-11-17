@@ -1,4 +1,4 @@
-package com.plcoding.backgroundlocationtracking
+package run.orientrack
 
 import android.Manifest
 import android.content.Context

@@ -1,4 +1,4 @@
-package com.plcoding.backgroundlocationtracking
+package run.orientrack
 
 import android.app.Application
 import android.app.NotificationChannel
@@ -14,7 +14,7 @@ class LocationApp: Application() {
             val channel = NotificationChannel(
                 "location",
                 "Location",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             )
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
