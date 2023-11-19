@@ -5,7 +5,10 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.IBinder
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.CoroutineScope
@@ -49,7 +52,10 @@ class LocationService: Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    @SuppressLint("HardwareIds")
     private fun start() {
+
+
         val notification = NotificationCompat.Builder(this, "location")
             .setContentTitle("Tracking location...")
             .setContentText("Location: null")
@@ -61,16 +67,48 @@ class LocationService: Service() {
             .getLocationUpdates(100L)
             .catch { e -> e.printStackTrace() }
             .onEach { location ->
+                var batteryLevel = 0;
+                val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let { ifilter ->
+                    this.registerReceiver(null, ifilter)
+                }
+
+                batteryStatus?.let { intent ->
+                    val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                    batteryLevel = level;
+                }
+
+                var androidId= Settings.Secure.getString(this.contentResolver, Settings.Secure.ANDROID_ID)
                 val lat = location.latitude.toString()
                 val long = location.longitude.toString()
+                val accuracy = location.accuracy.toString()
+                val speed = location.speed.toString()
+                val bearing = location.bearing.toString()
+                val altitude = location.altitude.toString()
+                val time = location.time.toString()
+                val battery = batteryLevel.toString()
+
                 val updatedNotification = notification.setContentText(
                     "Location: ($lat, $long)"
                 )
                 notificationManager.notify(1, updatedNotification.build())
 
+                val request_body_json = """
+                    {
+                        "id": "$androidId",
+                        "lat": $lat,
+                        "lon": $long,
+                        "accuracy": $accuracy,
+                        "speed": $speed,
+                        "bearing": $bearing,
+                        "altitude": $altitude,
+                        "time": $time,
+                        "battery": $battery
+                    }
+                """.trimIndent()
+
                 val request = Request.Builder()
                     .url("https://backend.orientrack.run:55581/track")
-                    .post(String.format("lat = %s, lon = %s", lat, long).toRequestBody())
+                    .post(request_body_json.toRequestBody())
                     .build()
 
                 try {

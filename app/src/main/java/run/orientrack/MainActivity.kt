@@ -1,6 +1,7 @@
 package run.orientrack
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -8,8 +9,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.ncorti.slidetoact.SlideToActView
 
-
 class MainActivity : AppCompatActivity() {
+    // in the below line, we are creating variables.
+    private val REQUEST_CODE = 101
+    private lateinit var imei: String
+
+    @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
