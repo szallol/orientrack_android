@@ -25,6 +25,10 @@
             android:layout_height="wrap_content"
             app:inner_color="@color/md_red_A200"
             app:text="Stop" />
+        <TextView
+            android:id="@+id/idTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

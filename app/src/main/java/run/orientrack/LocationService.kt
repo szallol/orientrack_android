@@ -18,6 +18,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -77,7 +78,7 @@ class LocationService: Service() {
                     batteryLevel = level;
                 }
 
-                var androidId= Settings.Secure.getString(this.contentResolver, Settings.Secure.ANDROID_ID)
+                val androidId= Settings.Secure.getString(this.contentResolver, Settings.Secure.ANDROID_ID)
                 val lat = location.latitude.toString()
                 val long = location.longitude.toString()
                 val accuracy = location.accuracy.toString()
@@ -106,9 +107,10 @@ class LocationService: Service() {
                     }
                 """.trimIndent()
 
+                val json = "application/json; charset=utf-8".toMediaType()
                 val request = Request.Builder()
                     .url("https://backend.orientrack.run:55581/track")
-                    .post(request_body_json.toRequestBody())
+                    .post(request_body_json.toRequestBody(json))
                     .build()
 
                 try {
