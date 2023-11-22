@@ -5,14 +5,14 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.ncorti.slidetoact.SlideToActView
 
 class MainActivity : AppCompatActivity() {
     // in the below line, we are creating variables.
-    private val REQUEST_CODE = 101
-    private lateinit var imei: String
 
     @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +39,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContentView(R.layout.activity_main)
+
+        val idTextView = findViewById<TextView>(R.id.idTextView)
+        idTextView.text = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 
         val startSlider = findViewById<SlideToActView>(R.id.start)
         val stopSlider = findViewById<SlideToActView>(R.id.stop)
