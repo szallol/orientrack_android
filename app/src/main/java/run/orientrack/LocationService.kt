@@ -109,7 +109,7 @@ class LocationService: Service() {
 
                 val json = "application/json; charset=utf-8".toMediaType()
                 val request = Request.Builder()
-                    .url("https://backend.orientrack.run:55581/track")
+                    .url(getString(R.string.https_backend_orientrack_run_track))
                     .post(request_body_json.toRequestBody(json))
                     .build()
 

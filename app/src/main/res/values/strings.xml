@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Orientrack</string>
+    <string name="https_backend_orientrack_run_track">https://backend.orientrack.run/track</string>
 </resources>
