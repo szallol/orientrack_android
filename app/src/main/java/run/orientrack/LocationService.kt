@@ -28,10 +28,10 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 class LocationService: Service() {
-
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var locationClient: LocationClient
     private val client = getUnsafeOkHttpClient()
+    private var displayName = ""
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
@@ -47,7 +47,9 @@ class LocationService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.action) {
-            ACTION_START -> start()
+            ACTION_START -> {
+                displayName = intent.getStringExtra("displayName").toString()
+                start()}
             ACTION_STOP -> stop()
         }
         return super.onStartCommand(intent, flags, startId)
@@ -55,8 +57,6 @@ class LocationService: Service() {
 
     @SuppressLint("HardwareIds")
     private fun start() {
-
-
         val notification = NotificationCompat.Builder(this, "location")
             .setContentTitle("Tracking location...")
             .setContentText("Location: null")
@@ -89,13 +89,14 @@ class LocationService: Service() {
                 val battery = batteryLevel.toString()
 
                 val updatedNotification = notification.setContentText(
-                    "Location: ($lat, $long)"
+                    "Location: ($lat, $long), Name: $displayName"
                 )
                 notificationManager.notify(1, updatedNotification.build())
 
-                val request_body_json = """
+                val requestBodyJSON = """
                     {
                         "id": "$androidId",
+                        "display_name": "$displayName",
                         "lat": $lat,
                         "lon": $long,
                         "accuracy": $accuracy,
@@ -110,7 +111,7 @@ class LocationService: Service() {
                 val json = "application/json; charset=utf-8".toMediaType()
                 val request = Request.Builder()
                     .url(getString(R.string.https_backend_orientrack_run_track))
-                    .post(request_body_json.toRequestBody(json))
+                    .post(requestBodyJSON.toRequestBody(json))
                     .build()
 
                 try {
@@ -126,7 +127,7 @@ class LocationService: Service() {
 
         startForeground(1, notification.build())
     }
-    fun getUnsafeOkHttpClient(): OkHttpClient {
+    private fun getUnsafeOkHttpClient(): OkHttpClient {
         return try {
             // Create a trust manager that does not validate certificate chains
             val trustAllCerts = arrayOf<TrustManager>(
